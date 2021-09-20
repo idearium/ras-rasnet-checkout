@@ -55,14 +55,4 @@ And enter the local URL for `auto-loader-dev.js` in Checkout Settings, e.g `http
 
 ## Release
 
-Everytime a PR is merged to the master branch, CircleCI will trigger a build automatically. However, it won't create a new Git release until it is approved by a person with write access to the repository. If you have write access, you can approve a release job by going to [CircleCI](https://circleci.com/gh/bigcommerce/workflows/checkout-js/tree/master) and look for the job you wish to approve. You can also navigate directly to the release job by clicking on the yellow dot next to the merged commit.
-
-
-## Contribution
-
-We currently do not accept Pull Requests from external parties. However, if you are an external party and want to report a bug or provide your feedback, you are more than welcome to raise a GitHub Issue. We will attend to these issues as quickly as we can.
-
-More information can be found in the [contribution guide](CONTRIBUTING.md) and [code of conduct](CODE_OF_CONDUCT.md) for this project.
-
-
-Copyright (C) 2019-Present BigCommerce Inc. All rights reserved.
+To release this custom checkout, first run `npm run build`. This will update the files in the `dist` directory. After that, simply copy the changed files into the webdav directory by following https://developer.bigcommerce.com/stencil-docs/customizing-checkout/installing-custom-checkouts and update the loader version in the bigcommerce store ui.
