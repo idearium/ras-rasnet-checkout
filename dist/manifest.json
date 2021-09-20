@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "appVersion": "1.163.5",
+  "appVersion": "1.163.6",
   "dynamicChunks": {
     "js": [
       "cart-summary-drawer-dba047e9.js",
