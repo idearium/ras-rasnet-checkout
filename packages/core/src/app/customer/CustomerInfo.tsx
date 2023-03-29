@@ -19,18 +19,20 @@ export interface CustomerSignOutEvent {
 }
 
 interface WithCheckoutCustomerInfoProps {
-    email: string;
-    methodId: string;
+    firstName: string;
     isSignedIn: boolean;
     isSigningOut: boolean;
+    lastName: string;
+    methodId: string;
     signOut(options?: CustomerRequestOptions): Promise<CheckoutSelectors>;
 }
 
 const CustomerInfo: FunctionComponent<CustomerInfoProps & WithCheckoutCustomerInfoProps> = ({
-    email,
-    methodId,
+    firstName: businessName,
     isSignedIn,
     isSigningOut,
+    lastName: memberCode,
+    methodId,
     onSignOut = noop,
     onSignOutError = noop,
     signOut,
@@ -60,7 +62,7 @@ const CustomerInfo: FunctionComponent<CustomerInfoProps & WithCheckoutCustomerIn
                 className="customerView-body optimizedCheckout-contentPrimary"
                 data-test="customer-info"
             >
-                {email}
+                ({ memberCode }) { businessName }
             </div>
 
             <div className="customerView-actions">
