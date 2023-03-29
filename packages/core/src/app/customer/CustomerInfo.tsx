@@ -103,10 +103,11 @@ function mapToWithCheckoutCustomerInfoProps({
         checkout.payments && checkout.payments.length === 1 ? checkout.payments[0].providerId : '';
 
     return {
-        email: billingAddress.email || customer.email,
-        methodId,
+        firstName: customer.firstName,
         isSignedIn: canSignOut(customer, checkout, methodId),
         isSigningOut: isSigningOut(),
+        lastName: customer.lastName,
+        methodId,
         signOut: checkoutService.signOutCustomer,
     };
 }
