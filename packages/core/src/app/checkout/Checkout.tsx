@@ -660,7 +660,7 @@ class Checkout extends Component<
         if (isBillingSameAsShipping) {
             this.navigateToNextIncompleteStep();
         } else {
-            this.navigateToStep(CheckoutStepType.Billing);
+            this.navigateToStep(CheckoutStepType.Payment);
         }
     };
 
