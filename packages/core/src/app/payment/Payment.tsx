@@ -54,7 +54,7 @@ export interface PaymentProps {
 
 interface WithCheckoutPaymentProps {
     availableStoreCredit: number;
-    billingAddress: BillingAddress;
+    billingAddress?: BillingAddress;
     cartUrl: string;
     defaultMethod?: PaymentMethod;
     finalizeOrderError?: Error;
@@ -76,7 +76,7 @@ interface WithCheckoutPaymentProps {
     loadCheckout(): Promise<CheckoutSelectors>;
     loadPaymentMethods(): Promise<CheckoutSelectors>;
     submitOrder(values: OrderRequestBody): Promise<CheckoutSelectors>;
-    updateAddress(address: BillingAddress): Promise<CheckoutSelectors>;
+    updateAddress(address: BillingAddress | unknown): Promise<CheckoutSelectors>;
 }
 
 interface PaymentState {
