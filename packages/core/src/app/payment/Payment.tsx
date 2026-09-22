@@ -120,6 +120,7 @@ class Payment extends Component<
             onReady = noop,
             onUnhandledError = noop,
             usableStoreCredit,
+            isStoreCreditApplied,
             defaultMethod,
             analyticsTracker
         } = this.props;
@@ -128,7 +129,7 @@ class Payment extends Component<
 
         analyticsTracker.selectedPaymentMethod((selectedMethod || defaultMethod)?.config.displayName);
 
-        if (usableStoreCredit) {
+        if (usableStoreCredit && !isStoreCreditApplied) {
             this.handleStoreCreditChange(true);
         }
 

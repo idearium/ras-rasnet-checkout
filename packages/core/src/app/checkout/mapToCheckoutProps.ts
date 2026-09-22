@@ -42,26 +42,33 @@ export default function mapToCheckoutProps({
 
     const billingAddress = data.getBillingAddress();
     const customer = data.getCustomer();
+    const customerAddress = customer?.addresses[0];
 
-    if (billingAddress && customer) {
-        billingAddress.address1 = customer.addresses[0]?.address1;
-        billingAddress.address2 = customer.addresses[0]?.address2;
-        billingAddress.city = customer.addresses[0]?.city;
-        billingAddress.company = customer.addresses[0]?.company;
-        billingAddress.country = customer.addresses[0]?.country;
-        billingAddress.countryCode = customer.addresses[0]?.countryCode;
-        billingAddress.email = customer.email;
-        billingAddress.firstName = customer.addresses[0]?.firstName;
-        billingAddress.lastName = customer.addresses[0]?.lastName;
-        billingAddress.phone = customer.addresses[0]?.phone;
-        billingAddress.postalCode = customer.addresses[0]?.postalCode;
-        billingAddress.stateOrProvince = customer.addresses[0]?.stateOrProvince;
-        billingAddress.stateOrProvinceCode = customer.addresses[0]?.stateOrProvinceCode;
+    let displayBillingAddress = billingAddress;
+
+    if (billingAddress && customer && customerAddress) {
+        displayBillingAddress = {
+            ...billingAddress,
+            address1: customerAddress.address1,
+            address2: customerAddress.address2,
+            city: customerAddress.city,
+            company: customerAddress.company,
+            country: customerAddress.country,
+            countryCode: customerAddress.countryCode,
+            email: customer.email,
+            firstName: customerAddress.firstName,
+            lastName: customerAddress.lastName,
+            phone: customerAddress.phone,
+            postalCode: customerAddress.postalCode,
+            stateOrProvince: customerAddress.stateOrProvince,
+            stateOrProvinceCode: customerAddress.stateOrProvinceCode,
+        };
     }
 
     return {
-        billingAddress,
+        billingAddress: displayBillingAddress,
         cart: data.getCart(),
+        applyStoreCredit: checkoutService.applyStoreCredit,
         clearError: checkoutService.clearError,
         consignments: data.getConsignments(),
         hasCartChanged: submitOrderError && submitOrderError.type === 'cart_changed', // TODO: Need to clear the error once it's displayed
