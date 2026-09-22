@@ -261,6 +261,34 @@ describe('Payment', () => {
         expect(checkoutService.applyStoreCredit).toHaveBeenCalledWith(true);
     });
 
+    it('does not apply store credit on mount when store credit is already applied', async () => {
+        jest.spyOn(checkoutState.data, 'getCheckout').mockReturnValue({
+            ...getCheckout(),
+            isStoreCreditApplied: true,
+        });
+
+        jest.spyOn(checkoutState.data, 'getCustomer').mockReturnValue({
+            ...getCustomer(),
+            storeCredit: 10,
+        });
+
+        jest.spyOn(checkoutService, 'applyStoreCredit').mockResolvedValue(checkoutState);
+
+        const defaultProps = {
+            errorLogger: createErrorLogger(),
+            onSubmit: jest.fn(),
+            onSubmitError: jest.fn(),
+            onUnhandledError: jest.fn(),
+            usableStoreCredit: 10,
+        };
+
+        mount(<PaymentTest {...defaultProps} />);
+
+        await new Promise((resolve) => process.nextTick(resolve));
+
+        expect(checkoutService.applyStoreCredit).not.toHaveBeenCalled();
+    });
+
     it('sets default selected payment method', async () => {
         const container = mount(<PaymentTest {...defaultProps} />);
 

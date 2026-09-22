@@ -14,9 +14,9 @@ import { act } from 'react-dom/test-utils';
 import { AnalyticsContextProps, AnalyticsEvents, AnalyticsProviderMock } from '@bigcommerce/checkout/analytics';
 
 import { getAddressFormFields } from '../address/formField.mock';
-import { BillingProps } from '../billing';
+import { BillingProps, StaticBillingAddress } from '../billing';
 import Billing from '../billing/Billing';
-import { getEmptyBillingAddress } from '../billing/billingAddresses.mock';
+import { getBillingAddress, getEmptyBillingAddress } from '../billing/billingAddresses.mock';
 import { getCart } from '../cart/carts.mock';
 import { getPhysicalItem } from '../cart/lineItem.mock';
 import { createErrorLogger, CustomError, ErrorModal } from '../common/error';
@@ -874,6 +874,158 @@ describe('Checkout', () => {
             );
 
             expect(defaultProps.errorLogger.log).toHaveBeenCalledWith(error);
+        });
+    });
+
+    describe('store credit', () => {
+        it('applies store credit when checkout is loaded with available store credit', async () => {
+            jest.spyOn(checkoutState.data, 'getCustomer').mockReturnValue({
+                ...getCustomer(),
+                storeCredit: 10,
+            });
+
+            jest.spyOn(checkoutService, 'applyStoreCredit').mockResolvedValue(checkoutState);
+
+            mount(<CheckoutTest {...defaultProps} />);
+
+            await new Promise((resolve) => process.nextTick(resolve));
+
+            expect(checkoutService.applyStoreCredit).toHaveBeenCalledWith(true);
+        });
+
+        it('does not apply store credit when customer has no store credit', async () => {
+            jest.spyOn(checkoutState.data, 'getCustomer').mockReturnValue({
+                ...getCustomer(),
+                storeCredit: 0,
+            });
+
+            jest.spyOn(checkoutService, 'applyStoreCredit').mockResolvedValue(checkoutState);
+
+            mount(<CheckoutTest {...defaultProps} />);
+
+            await new Promise((resolve) => process.nextTick(resolve));
+
+            expect(checkoutService.applyStoreCredit).not.toHaveBeenCalled();
+        });
+
+        it('does not apply store credit when it is already applied', async () => {
+            jest.spyOn(checkoutState.data, 'getCustomer').mockReturnValue({
+                ...getCustomer(),
+                storeCredit: 10,
+            });
+
+            jest.spyOn(checkoutState.data, 'getCheckout').mockReturnValue({
+                ...getCheckout(),
+                isStoreCreditApplied: true,
+            });
+
+            jest.spyOn(checkoutService, 'applyStoreCredit').mockResolvedValue(checkoutState);
+
+            mount(<CheckoutTest {...defaultProps} />);
+
+            await new Promise((resolve) => process.nextTick(resolve));
+
+            expect(checkoutService.applyStoreCredit).not.toHaveBeenCalled();
+        });
+
+        it('does not apply store credit when grand total is zero', async () => {
+            jest.spyOn(checkoutState.data, 'getCustomer').mockReturnValue({
+                ...getCustomer(),
+                storeCredit: 10,
+            });
+
+            jest.spyOn(checkoutState.data, 'getCheckout').mockReturnValue({
+                ...getCheckout(),
+                grandTotal: 0,
+            });
+
+            jest.spyOn(checkoutService, 'applyStoreCredit').mockResolvedValue(checkoutState);
+
+            mount(<CheckoutTest {...defaultProps} />);
+
+            await new Promise((resolve) => process.nextTick(resolve));
+
+            expect(checkoutService.applyStoreCredit).not.toHaveBeenCalled();
+        });
+
+        it('logs error when applying store credit fails', async () => {
+            const error = new Error('Unable to apply store credit');
+
+            jest.spyOn(checkoutState.data, 'getCustomer').mockReturnValue({
+                ...getCustomer(),
+                storeCredit: 10,
+            });
+
+            jest.spyOn(checkoutService, 'applyStoreCredit').mockRejectedValue(error);
+
+            jest.spyOn(checkoutService, 'loadShippingAddressFields').mockResolvedValue(
+                checkoutState,
+            );
+
+            jest.spyOn(checkoutService, 'loadShippingOptions').mockResolvedValue(checkoutState);
+
+            const container = mount(<CheckoutTest {...defaultProps} />);
+
+            await new Promise((resolve) => process.nextTick(resolve));
+            container.update();
+
+            expect(defaultProps.errorLogger.log).toHaveBeenCalledWith(error);
+            expect(container.find(ErrorModal)).toHaveLength(0);
+        });
+
+        it('does not mutate the stored billing address when mapping props', async () => {
+            jest.spyOn(checkoutState.data, 'getBillingAddress').mockReturnValue(
+                getBillingAddress(),
+            );
+
+            jest.spyOn(checkoutState.data, 'getCustomer').mockReturnValue(getGuestCustomer());
+
+            mount(<CheckoutTest {...defaultProps} />);
+
+            await new Promise((resolve) => process.nextTick(resolve));
+
+            expect(checkoutState.data.getBillingAddress()).toEqual(getBillingAddress());
+        });
+
+        it('prefills billing summary with the customer saved address without mutating the store', async () => {
+            jest.useRealTimers();
+
+            jest.spyOn(checkoutState.data, 'getCart').mockReturnValue({
+                ...getCart(),
+                lineItems: {
+                    ...getCart().lineItems,
+                    physicalItems: [],
+                },
+            });
+
+            jest.spyOn(checkoutState.data, 'getCustomer').mockReturnValue(getCustomer());
+
+            jest.spyOn(checkoutState.data, 'getBillingAddress').mockReturnValue(
+                getBillingAddress(),
+            );
+
+            jest.spyOn(checkoutState.data, 'getBillingAddressFields').mockReturnValue(
+                getAddressFormFields(),
+            );
+
+            const container = mount(<CheckoutTest {...defaultProps} />);
+
+            // Wait for initial load and the lazy-loaded summary to resolve
+            await new Promise((resolve) => setTimeout(resolve, 10));
+            container.update();
+
+            const savedAddress = getCustomer().addresses[0];
+
+            expect(container.find(StaticBillingAddress).prop('address')).toMatchObject({
+                address1: savedAddress.address1,
+                city: savedAddress.city,
+                countryCode: savedAddress.countryCode,
+                firstName: savedAddress.firstName,
+                lastName: savedAddress.lastName,
+                postalCode: savedAddress.postalCode,
+            });
+
+            expect(checkoutState.data.getBillingAddress()).toEqual(getBillingAddress());
         });
     });
 });

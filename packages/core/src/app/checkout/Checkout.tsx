@@ -140,6 +140,7 @@ export interface WithCheckoutProps {
     canCreateAccountInCheckout: boolean;
     promotions?: Promotion[];
     steps: CheckoutStepStatus[];
+    applyStoreCredit(useStoreCredit: boolean): Promise<CheckoutSelectors>;
     clearError(error?: Error): void;
     loadCheckout(id: string, options?: RequestOptions<CheckoutParams>): Promise<CheckoutSelectors>;
     subscribeToConsignments(subscriber: (state: CheckoutSelectors) => void): () => void;
@@ -175,6 +176,7 @@ class Checkout extends Component<
 
     async componentDidMount(): Promise<void> {
         const {
+            applyStoreCredit,
             checkoutId,
             containerId,
             createEmbeddedMessenger,
@@ -222,6 +224,19 @@ class Checkout extends Component<
             messenger.postLoaded();
 
             analyticsTracker.checkoutBegin();
+
+            const customer = data.getCustomer();
+            const checkout = data.getCheckout();
+
+            if (
+                customer &&
+                checkout &&
+                !checkout.isStoreCreditApplied &&
+                customer.storeCredit > 0 &&
+                checkout.grandTotal > 0
+            ) {
+                applyStoreCredit(true).catch((error) => this.handleError(error));
+            }
 
             const consignments = data.getConsignments();
             const cart = data.getCart();
